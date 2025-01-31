@@ -17,11 +17,9 @@ app.get('/', async (req: any, res: any) => {
         const spec = await generator.generateFromRepo(repoUrl);
         console.log('Generation complete!');
 
-        // Create the Swagger Editor URL with the spec
         const yamlString = encodeURIComponent(spec);
         const swaggerEditorUrl = `https://editor.swagger.io/?yaml=${yamlString}`;
         
-        // Redirect to Swagger Editor
         res.redirect(swaggerEditorUrl);
     } catch (error: any) {
         console.error('Failed:', error.message);
