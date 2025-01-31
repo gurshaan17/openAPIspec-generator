@@ -1,0 +1,607 @@
+openapi: 3.0.0
+info:
+  title: Library API
+  version: 1.0.0
+paths:
+  /analytics/most-borrowed:
+    get:
+      summary: Get the most borrowed books
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: A list of the most borrowed books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    title:
+                      type: string
+                    isbn:
+                      type: string
+                    borrowCount:
+                      type: integer
+        '500':
+          description: Internal server error
+  /analytics/monthly-report:
+    get:
+      summary: Generate a monthly usage report
+      tags:
+        - Analytics
+      parameters:
+        - in: query
+          name: month
+          required: false
+          description: The month for the report (1-12)
+          schema:
+            type: integer
+        - in: query
+          name: year
+          required: false
+          description: The year for the report
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Monthly usage report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  month:
+                    type: integer
+                  year:
+                    type: integer
+                  totalBorrowed:
+                    type: integer
+                  usersInvolved:
+                    type: integer
+                  borrowedBooks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        title:
+                          type: string
+                        isbn:
+                          type: string
+        '500':
+          description: Internal server error
+  /books:
+    post:
+      summary: Add a new book
+      tags:
+        - Books
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                isbn:
+                  type: string
+                copies:
+                  type: integer
+                authors:
+                  type: array
+                  items:
+                    type: string
+                categories:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Book added successfully
+        '400':
+          description: Invalid input data
+        '500':
+          description: Internal server error
+    get:
+      summary: Lists all the books
+      tags:
+        - Books
+      responses:
+        '200':
+          description: List of all the available books with more than 1 copy
+        '500':
+          description: Internal server error
+  /books/{id}:
+    put:
+      summary: Edit an existing book
+      tags:
+        - Books
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID of the book to edit
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                isbn:
+                  type: string
+                copies:
+                  type: integer
+                authors:
+                  type: array
+                  items:
+                    type: string
+                categories:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Book updated successfully
+        '400':
+          description: Invalid input data
+        '404':
+          description: Book not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete a book
+      tags:
+        - Books
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID of the book to delete
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Book deleted successfully
+        '404':
+          description: Book not found
+        '500':
+          description: Internal server error
+  /books/{isbnOrTitle}:
+    get:
+      summary: Get details of a book by ISBN or title
+      tags:
+        - Books
+      parameters:
+        - in: path
+          name: isbnOrTitle
+          required: true
+          description: ISBN or title of the book to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Book details retrieved successfully
+        '404':
+          description: Book not found
+        '500':
+          description: Internal server error
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+                role:
+                  type: string
+                  enum:
+                    - admin
+                    - member
+      responses:
+        '201':
+          description: User registered successfully. Verification email sent.
+        '400':
+          description: Invalid input data.
+  /auth/login:
+    post:
+      summary: Login a user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: User logged in successfully. Returns a JWT token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '401':
+          description: Invalid credentials.
+        '404':
+          description: User not found.
+  /auth/verify-email:
+    get:
+      summary: Verify user email
+      tags:
+        - Auth
+      parameters:
+        - in: query
+          name: token
+          required: true
+          description: Verification token sent to the user's email
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Email verified successfully.
+        '400':
+          description: Invalid or expired token.
+        '500':
+          description: Internal server error.
+  /borrow:
+    post:
+      summary: Borrow a book
+      tags:
+        - Borrow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bookId:
+                  type: integer
+      responses:
+        '200':
+          description: Book borrowed successfully
+        '400':
+          description: Borrowing limit reached or book not available
+        '404':
+          description: Book not found
+        '500':
+          description: Internal server error
+  /borrow/return:
+    post:
+      summary: Return a borrowed book
+      tags:
+        - Borrow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bookId:
+                  type: integer
+      responses:
+        '200':
+          description: Book returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  fine:
+                    type: number
+        '404':
+          description: Borrowing record not found
+        '500':
+          description: Internal server error
+  /borrow/limit:
+    get:
+      summary: Check the borrowing limit for the authenticated user
+      tags:
+        - Borrow
+      responses:
+        '200':
+          description: Borrowing limit retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  borrowingLimit:
+                    type: integer
+                  borrowedCount:
+                    type: integer
+                  remaining:
+                    type: integer
+        '500':
+          description: Internal server error
+  /fine/calculate/{borrowedBookId}:
+    get:
+      summary: Calculate fine for a borrowed book
+      tags:
+        - Fine
+      parameters:
+        - in: path
+          name: borrowedBookId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fine calculated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  overdueDays:
+                    type: integer
+                  fine:
+                    type: number
+        '400':
+          description: Invalid borrowed book ID
+        '404':
+          description: Borrowed book not found
+        '500':
+          description: Internal server error
+  /fine/total:
+    get:
+      summary: Get total fine for the authenticated user
+      tags:
+        - Fine
+      responses:
+        '200':
+          description: Total fine retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalFine:
+                    type: number
+        '500':
+          description: Internal server error
+  /pay:
+    post:
+      summary: Pay a fine
+      tags:
+        - Fine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                borrowedBookId:
+                  type: integer
+                amount:
+                  type: number
+      responses:
+        '200':
+          description: Fine paid successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  transaction:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      amount:
+                        type: number
+                      paymentDate:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid input or insufficient payment
+        '404':
+          description: Borrowing record not found
+        '500':
+          description: Internal server error
+  /invoice/{id}:
+    get:
+      summary: Generate an invoice for a payment
+      tags:
+        - Invoice
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Invoice generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactionId:
+                    type: integer
+                  user:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      email:
+                        type: string
+                  book:
+                    type: object
+                    properties:
+                      title:
+                        type: string
+                      isbn:
+                        type: string
+                  amount:
+                    type: number
+                  paymentDate:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid transaction ID
+        '404':
+          description: Transaction not found
+        '500':
+          description: Internal server error
+  /users/{id}:
+    get:
+      summary: Get details of a user
+      tags:
+        - Users
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  role:
+                    type: string
+                  verified:
+                    type: boolean
+        '404':
+          description: User not found
+  /users/{id}/borrowed-books:
+    get:
+      summary: Get list of borrowed books for a user
+      tags:
+        - Users
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of borrowed books and total fines
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  borrowedBooks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        title:
+                          type: string
+                        dueDate:
+                          type: string
+                          format: date
+                  totalFine:
+                    type: integer
+        '403':
+          description: Access denied
+        '404':
+          description: User not found
+  /users/{id}/enable-disable:
+    patch:
+      summary: Enable or disable a user account
+      tags:
+        - Users
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                disabled:
+                  type: boolean
+      responses:
+        '200':
+          description: User account status updated successfully
+        '400':
+          description: Invalid input
+        '403':
+          description: Access denied
+        '404':
+          description: User not found
+  /:
+    get:
+      summary: Check server status
+      tags:
+        - Server
+      responses:
+        '200':
+          description: Server status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  server:
+                    type: string
+                    example: healthy
+  /api-docs:
+    get:
+      summary: Get API documentation
+      tags:
+        - Docs
+      responses:
+        '200':
+          description: Swagger UI for API documentation
