@@ -17,10 +17,20 @@ app.get('/', async (req: any, res: any) => {
         const spec = await generator.generateFromRepo(repoUrl);
         console.log('Generation complete!');
 
-        const yamlString = encodeURIComponent(spec);
-        const swaggerEditorUrl = `https://editor.swagger.io/?yaml=${yamlString}`;
-        
-        res.redirect(swaggerEditorUrl);
+        // Render a form to submit the spec to Swagger Editor
+        res.send(`
+            <html>
+                <body>
+                    <form id="swagger-form" action="https://editor.swagger.io/" method="POST" target="_blank">
+                        <input type="hidden" name="yaml" value="${encodeURIComponent(spec)}" />
+                        <button type="submit">Open Swagger Editor</button>
+                    </form>
+                    <script>
+                        document.getElementById('swagger-form').submit();
+                    </script>
+                </body>
+            </html>
+        `);
     } catch (error: any) {
         console.error('Failed:', error.message);
         res.status(500).json({ error: error.message });
