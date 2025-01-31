@@ -55,13 +55,12 @@ class OpenAPIGenerator {
             throw new Error('Invalid GitHub repository URL');
         }
 
-        // Clean the repo name (remove .git if present)
         const repo = match[2].replace('.git', '');
 
         return {
             owner: match[1],
             repo: repo,
-            branch: 'main' // You can make this configurable if needed
+            branch: 'main'
         };
     }
 
@@ -177,7 +176,6 @@ class OpenAPIGenerator {
         console.log('Generating OpenAPI specification using ChatGPT...');
     
         try {
-            // First, analyze code in chunks and collect endpoint information
             const chunks = this.createCodeChunks();
             let endpointAnalysis = '';
     
